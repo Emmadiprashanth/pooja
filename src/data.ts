@@ -1,11 +1,37 @@
 export const samagri = [
-  'Ganesha idol or turmeric Ganesha',
-  'Turmeric, kumkum and akshata',
-  'Flowers and sacred leaves',
-  'Coconut and fruits',
-  'Lamp, wicks and oil',
-  'Naivedyam and betel leaves',
+  'Photo or small deity',
+  'Akshatas',
+  'Flowers',
+  'Fruits or dates',
+  'Two Panchapatras',
+  'Deepam (2)',
+  'Agarbatti',
+  'Aarathi',
+  'Ganta',
 ];
+
+// Each Pooja can provide its own picture for the same Samagri slot.
+// These lightweight illustrations are used in the local MVP and can be
+// replaced with bundled JPG/PNG assets when the final photo set is ready.
+export const samagriIllustrations = ['🛕', '🌾', '🌸', '🍎', '🥣', '🪔', '🕯️', '🔥', '🔔'];
+
+export const vinayakaPooja = {
+  title: 'Vinayaka Pooja',
+  day: 'Wednesday',
+  participant: 'Prashanth Kumar',
+  gotram: 'Amarushi',
+  subtitles: [
+    'Maarjanamu: Om apavitrah pavitrovaa sarvaavasthaam gato pivaa yah smaret Pundareekaaksham sabaahyaabhyantara shuchih.',
+    'Ganapati / Guru Praarthana: Shuklaambaradharam Vishnum… sarva vighnopashaantaye.',
+    'Deepaaraadhana: Deepatvam brahmarooposi jyotishaam prabhuravyayah…',
+    'Aachamanamu: Keshavaaya namah, Naaraayanaaya namah, Maadhavaaya namah, Govindaaya namah.',
+    'Bhootocchaatana and Praanaayaamamu: Uthishthantu bhoota-pishaachaah… praanayaama idam proktam.',
+    'Sankalpamu: Sri Vinaayaka devataam uddishya yaavachchhakti poojaam karishye.',
+    'Panchopachaara Pooja and Ganapati Stuti: Pranamya shirasa devam… aayuh kaamaartha siddhaye.',
+    'Dhoopam, Deepam, Naivedyam and Neeraajanam: Sri Mahaaganaadhipataye namah samarpayaami.',
+    'Mangalam: Lokah samastaah sukhino bhavantu. Pooja complete.',
+  ],
+};
 
 export const poojaSteps = [
   { title: 'Lighting the lamp', instruction: 'Light the lamp and prepare the Pooja space.' },
@@ -19,8 +45,8 @@ export const poojaSteps = [
 export const dayWisePoojas = [
   { day: 'Monday', icon: '🔱', title: 'Lord Shiva Pooja' },
   { day: 'Tuesday', icon: '🙏', title: 'Lord Hanuman Pooja' },
-  { day: 'Wednesday', icon: '🐘', title: 'Lord Ganesha Pooja' },
-  { day: 'Thursday', icon: '🕉️', title: 'Sai Baba Pooja' },
+  { day: 'Wednesday', icon: '🐘', title: 'Vinayaka Pooja' },
+  { day: 'Thursday', icon: '🕉️', title: 'Lord Vishnu Pooja' },
   { day: 'Friday', icon: '🪷', title: 'Lakshmi Devi Pooja' },
   { day: 'Saturday', icon: '🌺', title: 'Sri Venkateswara Swamy Pooja' },
   { day: 'Sunday', icon: '☀️', title: 'Surya Narayana Pooja' },

@@ -2,7 +2,7 @@
 
 Last updated: 15 September 2026
 Owner: Prashanth
-Platforms: iOS and Android
+Platforms: iOS, Android and web browsers
 Repository: https://github.com/Emmadiprashanth/pooja
 
 ## How to use this document
@@ -35,9 +35,11 @@ Acceptance: changing location/day changes recommendations from reviewed event da
 ## 2. Pooja services and catalog
 
 - [ ] CAT-01 — P0 — Separate Daily, weekday, festival and important Special Poojas. Status: Partial.
-- [ ] CAT-02 — P0 — Every selection opens the respective title, Samagri, recording and subtitles. Status: Partial; titles are connected but Samagri/audio are shared demo assets.
+- [ ] CAT-02 — P0 — Every selection opens the respective title, Samagri, recording and subtitles. Status: Partial; each Pooja now has a content record. Daily/weekday Samagri exists and only Wednesday Vinayaka has a recording; unrecorded Poojas show a pending state.
 - [ ] CAT-03 — P0 — Display real duration, preparation requirements and access level. Status: Partial; duration/access labels are sample values.
 - [ ] CAT-04 — P0 — Poojari reviews each script and Samagri list before publication. Status: Planned.
+- [ ] CAT-05 — P1 — Add a real photo for each Samagri item in each Pooja. Status: Partial; picture slots and illustrations exist, and the Ganesh deity photo is used for Vinayaka's deity item. Other item photos are pending.
+- [ ] CAT-06 — P1 — Show the matching deity photo for each weekday Pooja. Status: Partial; seven supplied photos are mapped in the local app, with native/device testing pending.
 
 ### Initial weekday list
 
@@ -45,8 +47,8 @@ Acceptance: changing location/day changes recommendations from reviewed event da
 | --- | --- |
 | Monday | Lord Shiva |
 | Tuesday | Lord Hanuman |
-| Wednesday | Lord Ganesha |
-| Thursday | Sai Baba |
+| Wednesday | Vinayaka Pooja |
+| Thursday | Lord Vishnu |
 | Friday | Lakshmi Devi |
 | Saturday | Sri Venkateswara Swamy |
 | Sunday | Surya Narayana |
@@ -70,15 +72,16 @@ The Poojari must identify which rituals are suitable for self-guided use and whi
 - [ ] SESSION-03 — P0 — Add, edit and remove participant names and optional Gotram on every Pooja audio page. Status: Partial; session-only UI exists.
 - [ ] SESSION-04 — P0 — Select participants from saved family members without duplicate entries. Status: Partial.
 - [ ] SESSION-05 — P0 — Keep participant selection attached to the respective Pooja session and retain it when navigating away and returning. Status: Planned.
-- [ ] SESSION-06 — P0 — Match subtitles to spoken words using reviewed timestamps. Status: Planned; current text changes at equal intervals over a tone.
+- [ ] SESSION-06 — P0 — Match subtitles to spoken words using reviewed timestamps. Status: Planned; Vinayaka demo text currently changes at equal intervals over the supplied MP3.
 - [ ] SESSION-07 — P0 — Handle loading, pause, completion, replay, interruption and audio errors clearly. Status: Partial.
 - [ ] SESSION-08 — P1 — Provide accessible controls and readable content on small phones and with enlarged text. Status: Planned.
+- [ ] SESSION-09 — P1 — Allow Play/Pause, speed changes and dragging to seek within the recording. Status: Partial; 0.75×–1.5× speed and drag-to-seek were checked in the web preview, with native/device testing pending.
 
 Acceptance: opening any catalog item preserves its identity. Editing a participant changes only that participant. Audio and subtitles remain aligned after pausing/resuming.
 
 ## 4. Recording and personalized Sankalpam
 
-- [ ] AUDIO-01 — P0 — Obtain one complete Daily Pooja and one festival recording, scripts and Samagri lists. Status: Blocked; recordings to come from Prashanth's Poojari.
+- [ ] AUDIO-01 — P0 — Obtain one complete Daily Pooja and one festival recording, scripts and Samagri lists. Status: Partial; Prashanth supplied one Wednesday Vinayaka demo MP3. Daily and festival recordings are still needed.
 - [ ] AUDIO-02 — P0 — Record clear Telugu instructions with pauses for performing actions. Status: Planned.
 - [ ] AUDIO-03 — P0 — Obtain permission for commercial recording use and explicit permission for any synthetic voice use. Status: Planned.
 - [ ] AUDIO-04 — P0 — Record Sankalpam separately and define participant/name/Gotram insertion points. Status: Planned.
@@ -93,10 +96,10 @@ Acceptance: participants heard in the recording match the confirmed session list
 - [ ] PROFILE-01 — P0 — Primary devotee name, Gotram and selected location. Status: Partial.
 - [ ] PROFILE-02 — P0 — Add, edit and remove all family member names. Status: Partial.
 - [ ] PROFILE-03 — P0 — Persist profile and family details across restarts. Status: Planned.
-- [ ] PROFILE-04 — P0 — Implement registration/login and associate subscriptions and notification preferences with the correct account. Status: Planned.
+- [ ] PROFILE-04 — P0 — Implement registration/login and associate subscriptions and notification preferences with the correct account. Status: Partial; local demo login/register UI exists, but no authentication or account persistence is connected.
 - [ ] PROFILE-05 — P1 — Provide account deletion and appropriate privacy controls. Status: Planned.
 
-Existing primary demo values: Prashanth / Amararushi. Do not invent family member names.
+Existing primary demo values: Prashanth Kumar / Amarushi. Do not invent family member names.
 Login method and whether each saved family member needs a separate Gotram remain open decisions.
 
 ## 6. Location-specific Telugu calendar
@@ -213,4 +216,3 @@ Copy this template for each new item:
 ## Change log
 
 - 2026-09-15: Created consolidated requirements from the agreed app scope and current implementation status.
-

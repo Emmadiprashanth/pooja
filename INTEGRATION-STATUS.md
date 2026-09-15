@@ -1,4 +1,8 @@
-# Integration status — 12 September 2026
+# Integration status — 15 September 2026
+
+## Update — 15 September 2026
+
+Added a local demo login/register screen, separate Pooja content records, the supplied Wednesday Vinayaka MP3, speed controls and web-checked drag-to-seek. Daily and Monday–Sunday Poojas now share a 15-item Samagri foundation; Wednesday Vinayaka adds five specific items. Seven supplied deity photos are mapped to their weekday Poojas, with Thursday changed to Lord Vishnu Pooja. Other recordings remain pending. The deity photos are original large PNG files and should be prepared as lighter app assets before a store release.
 
 ## Update — 14 September 2026
 
@@ -8,7 +12,7 @@ Added expo-notifications and expo-constants plus `src/notifications.ts`, an iOS/
 
 ## Implemented in this change
 
-- Each Daily, weekday and Special Pooja selection opens the shared audio session with its own title.
+- Each Daily, weekday and Special Pooja selection opens a session with its own title and content record. Only Wednesday Vinayaka currently has a supplied MP3; unrecorded sessions show a pending state.
 - Session participants can be added, edited, removed and copied from the current family list. Each has a name and optional Gotram. These are session-only; no audio generation or persistent account storage is claimed.
 - Calendar has real month lengths (including February), month navigation, expandable dates, city selection and the current date in the selected timezone.
 - Eenadu is an external reference link only. No calendar API, content licence or worldwide location coverage has been verified. Unverified sample religious dates were removed from the calendar.
@@ -30,7 +34,7 @@ References:
 
 ### Push notifications
 
-Registration/authentication and a server are not present in this prototype. The existing reminder toggle is a visual demo, not push delivery.
+The local demo login UI is not real authentication. A server is not present in this prototype. The existing reminder toggle is a visual demo, not push delivery.
 
 Needed: authenticated user ID, device token registration/removal, explicit opt-in, APNs/FCM credentials and a scheduler. A reviewed event must contain city, timezone, date, Pooja ID and Samagri list. Schedule preparation reminders three days before and one day before at the user's chosen local time. Use stable delivery IDs to prevent duplicates, process invalid tokens and honour opt-out. Tapping a notification should open the referenced Pooja preparation page. Do not broadcast an India festival date to all international users.
 
@@ -40,6 +44,6 @@ Example copy: “Vinayaka Chavithi is tomorrow. Please get your Samagri ready.�
 
 Obtain a licensed feed or manually curated, Poojari-reviewed calendar for supported locations. Schema per day: location ID, timezone, ISO local date, Tithi and Nakshatram with local end times, festivals with Pooja IDs, source, reviewer and revision. Missing days must stay unavailable. Eenadu reference: https://www.eenadu.net/calendar
 
-## Git handoff
+## Release status
 
-This directory currently has no Git repository. No commit, push or deployment was performed. This is a partial implementation suitable for code review, not a production-ready release. The recorded audio and calendar content remain unfinished; actual push and paid subscriptions are not integrated.
+This Git repository contains a partial MVP suitable for review and local browser testing. It is not a production-ready mobile release. The Vinayaka demo MP3 is supplied; other recordings, reviewed subtitle timing, verified calendar content, real account authentication, live push delivery and paid subscriptions remain unfinished.
