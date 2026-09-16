@@ -1,4 +1,8 @@
-# Integration status — 15 September 2026
+# Integration status — 17 September 2026
+
+## Update — 17 September 2026
+
+Connected Supabase passwordless authentication and database-backed profiles. Indian users sign in with a mobile SMS OTP; international users sign in with an email OTP. OTP requests are protected by hCaptcha, and sessions persist securely so users do not enter an OTP on every visit. Profile and family-member records are protected by Row Level Security. Twilio, Resend SMTP, Supabase and hCaptcha have been configured and tested locally. Production payment, push notification delivery and verified Panchangam data remain unfinished.
 
 ## Update — 15 September 2026
 
@@ -34,7 +38,7 @@ References:
 
 ### Push notifications
 
-The local demo login UI is not real authentication. A server is not present in this prototype. The existing reminder toggle is a visual demo, not push delivery.
+Authentication and profile storage are connected through Supabase. The existing reminder toggle is still a visual demo, not push delivery.
 
 Needed: authenticated user ID, device token registration/removal, explicit opt-in, APNs/FCM credentials and a scheduler. A reviewed event must contain city, timezone, date, Pooja ID and Samagri list. Schedule preparation reminders three days before and one day before at the user's chosen local time. Use stable delivery IDs to prevent duplicates, process invalid tokens and honour opt-out. Tapping a notification should open the referenced Pooja preparation page. Do not broadcast an India festival date to all international users.
 
@@ -46,4 +50,4 @@ Obtain a licensed feed or manually curated, Poojari-reviewed calendar for suppor
 
 ## Release status
 
-This Git repository contains a partial MVP suitable for review and local browser testing. It is not a production-ready mobile release. The Vinayaka demo MP3 is supplied; other recordings, reviewed subtitle timing, verified calendar content, real account authentication, live push delivery and paid subscriptions remain unfinished.
+This Git repository contains a partial MVP suitable for friend testing in a browser. It is not a production-ready mobile release. Authentication and profile storage are connected; other recordings, reviewed subtitle timing, verified calendar content, live push delivery and paid subscriptions remain unfinished.

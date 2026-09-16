@@ -1,14 +1,28 @@
 import { StatusBar } from 'expo-status-bar';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import React, { useEffect, useState } from 'react';
-import { Image, Linking, Pressable, SafeAreaView, ScrollView, Switch, Text, TextInput, View, type GestureResponderEvent } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, Switch, Text, TextInput, View, type GestureResponderEvent } from 'react-native';
 import { dayWisePoojas, specialPoojas } from './src/data';
 import { getPooja } from './src/poojas';
+import { isSupabaseConfigured, supabase } from './src/supabase';
 import { styles as s } from './src/theme';
 import Calendar from './src/Calendar';
+import CaptchaGate, { type CaptchaGateHandle } from './src/CaptchaGate';
 
 type Screen = 'login' | 'home' | 'services' | 'calendar' | 'prepare' | 'payment' | 'guide' | 'profile';
+type LoginRegion = 'india' | 'international';
 const SessionContext = React.createContext({ title: 'Daily Pooja', choose: (title: string) => {}, family: [] as string[] });
+
+function suggestLoginRegion(): LoginRegion {
+  try {
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (timeZone) return timeZone === 'Asia/Kolkata' ? 'india' : 'international';
+    const locale = typeof navigator !== 'undefined' ? navigator.language : '';
+    return /[-_]IN$/i.test(locale) ? 'india' : 'international';
+  } catch {
+    return 'india';
+  }
+}
 
 function Button({ label, onPress, secondary = false }: { label: string; onPress: () => void; secondary?: boolean }) {
   return <Pressable onPress={onPress} style={({ pressed }) => [s.button, secondary && s.secondary, pressed && s.pressed]}><Text style={[s.buttonText, secondary && s.secondaryText]}>{label}</Text></Pressable>;
@@ -22,19 +36,100 @@ function Header({ title, onBack }: { title?: string; onBack?: () => void }) {
   </View>;
 }
 
-function Login({ onContinue }: { onContinue: (name: string, gotram: string) => void }) {
+function Login({ onDemoContinue }: { onDemoContinue: (name: string, gotram: string) => void }) {
+  const captchaRef = useRef<CaptchaGateHandle>(null);
   const [register, setRegister] = useState(true);
+  const [suggestedRegion] = useState<LoginRegion>(suggestLoginRegion);
+  const [region, setRegion] = useState<LoginRegion>(suggestedRegion);
   const [name, setName] = useState('Prashanth Kumar');
   const [gotram, setGotram] = useState('Amarushi');
-  const submit = () => { if (name.trim()) onContinue(name.trim(), gotram.trim() || 'Amarushi'); };
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  const captchaSiteKey = process.env.EXPO_PUBLIC_HCAPTCHA_SITE_KEY ?? '';
+  const normalizedPhone = `+91${phone.replace(/\D/g, '').slice(-10)}`;
+  const otpLength = region === 'india' ? 6 : 8;
+  const sendOtp = async () => {
+    setMessage('');
+    if (!isSupabaseConfigured || !supabase) {
+      onDemoContinue(name.trim() || 'Prashanth Kumar', gotram.trim() || 'Amarushi');
+      return;
+    }
+    if (region === 'india' && phone.replace(/\D/g, '').length !== 10) {
+      setMessage('Enter a valid 10-digit Indian mobile number.');
+      return;
+    }
+    if (region === 'international' && !/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setMessage('Enter a valid email address.');
+      return;
+    }
+    if (register && !name.trim()) {
+      setMessage('Please enter your full name.');
+      return;
+    }
+    if (!captchaSiteKey) {
+      setMessage('Security verification is not configured yet.');
+      return;
+    }
+    setBusy(true);
+    let captchaToken: string;
+    try {
+      captchaToken = await captchaRef.current!.execute();
+    } catch (error) {
+      setBusy(false);
+      setMessage(error instanceof Error ? error.message : 'Verification failed. Please try again.');
+      return;
+    }
+    const options = {
+      shouldCreateUser: register,
+      data: register ? { full_name: name.trim(), gotram: gotram.trim() } : undefined,
+      captchaToken,
+    };
+    const result = region === 'india'
+      ? await supabase.auth.signInWithOtp({ phone: normalizedPhone, options })
+      : await supabase.auth.signInWithOtp({ email: email.trim().toLowerCase(), options });
+    setBusy(false);
+    if (result.error) {
+      setMessage(result.error.message);
+      return;
+    }
+    setOtpSent(true);
+    setMessage(region === 'india' ? `OTP sent to ${normalizedPhone}.` : `OTP sent to ${email.trim().toLowerCase()}.`);
+  };
+  const verifyOtp = async () => {
+    setMessage('');
+    if (!supabase || otp.trim().length !== otpLength) {
+      setMessage(`Enter the ${otpLength}-digit OTP.`);
+      return;
+    }
+    setBusy(true);
+    const result = region === 'india'
+      ? await supabase.auth.verifyOtp({ phone: normalizedPhone, token: otp.trim(), type: 'sms' })
+      : await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: otp.trim(), type: 'email' });
+    setBusy(false);
+    if (result.error) {
+      setMessage(result.error.message);
+      return;
+    }
+    setMessage('OTP verified. Signing you in…');
+  };
   return <ScrollView contentContainerStyle={s.loginContent} keyboardShouldPersistTaps="handled">
     <View style={s.loginBrand}><View style={s.logo}><Text style={s.logoText}>DP</Text></View><Text style={s.loginBrandName}>Divya Pooja</Text><Text style={s.loginTagline}>Your Pooja · Your Guide</Text></View>
-    <View style={s.loginCard}><Text style={s.loginTitle}>{register ? 'Begin your Pooja journey' : 'Welcome back'}</Text><Text style={s.loginBody}>{register ? 'Create your local demo profile to personalize every Pooja.' : 'Continue with your devotee profile.'}</Text>
-      {register && <><Text style={s.inputLabel}>NAME</Text><TextInput value={name} onChangeText={setName} style={s.input} placeholder="Your full name" autoCapitalize="words" /></>}
-      <Text style={s.inputLabel}>GOTRAM</Text><TextInput value={gotram} onChangeText={setGotram} style={s.input} placeholder="Your Gotram" autoCapitalize="words" />
-      <Button label={register ? 'Create local profile' : 'Continue'} onPress={submit} />
-      <Pressable onPress={() => setRegister(value => !value)}><Text style={s.loginSwitch}>{register ? 'Already have a profile? Sign in' : 'New here? Create a profile'}</Text></Pressable>
-      <Text style={s.note}>Local MVP only · No data is sent to a server</Text>
+    <View style={s.loginCard}><Text style={s.loginTitle}>{register ? 'Begin your Pooja journey' : 'Welcome back'}</Text><Text style={s.loginBody}>{isSupabaseConfigured ? 'Choose your region. We will send a one-time password—no password to remember.' : 'OTP authentication is ready. Connect Supabase to enable real accounts.'}</Text>
+      {isSupabaseConfigured && <View style={s.authModeRow}><Pressable style={[s.authMode, region === 'india' && s.authModeActive]} onPress={() => { setRegion('india'); setOtpSent(false); setOtp(''); setMessage(''); }}><Text style={[s.authModeText, region === 'india' && s.authModeTextActive]}>🇮🇳 India</Text></Pressable><Pressable style={[s.authMode, region === 'international' && s.authModeActive]} onPress={() => { setRegion('international'); setOtpSent(false); setOtp(''); setMessage(''); }}><Text style={[s.authModeText, region === 'international' && s.authModeTextActive]}>🌍 International</Text></Pressable></View>}
+      {isSupabaseConfigured && !otpSent && <Text style={s.note}>Suggested from this device: {suggestedRegion === 'india' ? 'India' : 'International'}. You can change it above.</Text>}
+      {register && !otpSent && <><Text style={s.inputLabel}>NAME</Text><TextInput value={name} onChangeText={setName} style={s.input} placeholder="Your full name" autoCapitalize="words" /><Text style={s.inputLabel}>GOTRAM</Text><TextInput value={gotram} onChangeText={setGotram} style={s.input} placeholder="Your Gotram" autoCapitalize="words" /></>}
+      {isSupabaseConfigured && !otpSent && region === 'india' && <><Text style={s.inputLabel}>MOBILE NUMBER</Text><View style={s.phoneRow}><View style={s.phonePrefix}><Text style={s.phonePrefixText}>+91</Text></View><TextInput value={phone} onChangeText={value => setPhone(value.replace(/\D/g, '').slice(0, 10))} style={s.phoneInput} placeholder="10-digit mobile number" keyboardType="phone-pad" textContentType="telephoneNumber" /></View></>}
+      {isSupabaseConfigured && !otpSent && region === 'international' && <><Text style={s.inputLabel}>EMAIL</Text><TextInput value={email} onChangeText={setEmail} style={s.input} placeholder="you@example.com" autoCapitalize="none" autoCorrect={false} keyboardType="email-address" textContentType="emailAddress" /></>}
+      {isSupabaseConfigured && otpSent && <><Text style={s.inputLabel}>ONE-TIME PASSWORD</Text><TextInput value={otp} onChangeText={value => setOtp(value.replace(/\D/g, '').slice(0, otpLength))} style={[s.input, s.otpInput]} placeholder={`${otpLength}-digit OTP`} keyboardType="number-pad" textContentType="oneTimeCode" maxLength={otpLength} /><Pressable onPress={() => { setOtpSent(false); setOtp(''); setMessage(''); }}><Text style={s.loginSwitch}>Change {region === 'india' ? 'mobile number' : 'email address'}</Text></Pressable></>}
+      {message ? <Text style={s.authMessage}>{message}</Text> : null}
+      <Button label={busy ? 'Please wait…' : isSupabaseConfigured ? (otpSent ? 'Verify OTP' : 'Send OTP') : 'Continue local demo'} onPress={() => { if (!busy) void (otpSent ? verifyOtp() : sendOtp()); }} />
+      {isSupabaseConfigured && !otpSent && <Pressable onPress={() => { setRegister(value => !value); setMessage(''); }}><Text style={s.loginSwitch}>{register ? 'Already have an account? Sign in' : 'New here? Create an account'}</Text></Pressable>}
+      <Text style={s.note}>{isSupabaseConfigured ? (region === 'india' ? 'Indian users receive an SMS OTP on +91 mobile numbers.' : 'International users receive an OTP by email.') : 'Add the two EXPO_PUBLIC_SUPABASE values in .env to activate real login.'}</Text>
+      {isSupabaseConfigured && captchaSiteKey ? <CaptchaGate ref={captchaRef} siteKey={captchaSiteKey} /> : null}
     </View>
   </ScrollView>;
 }
@@ -175,7 +270,7 @@ function Guide({ go, name, gotram }: { go: (screen: Screen) => void; name: strin
   </ScrollView>;
 }
 
-function Profile({ name, setName, gotram, setGotram, familyMembers, setFamilyMembers, go }: { name: string; setName: (x: string) => void; gotram: string; setGotram: (x: string) => void; familyMembers: string[]; setFamilyMembers: React.Dispatch<React.SetStateAction<string[]>>; go: (screen: Screen) => void }) {
+function Profile({ name, setName, gotram, setGotram, location, setLocation, familyMembers, setFamilyMembers, go, email, saving, saveMessage, onSave, onSignOut }: { name: string; setName: (x: string) => void; gotram: string; setGotram: (x: string) => void; location: string; setLocation: (x: string) => void; familyMembers: string[]; setFamilyMembers: React.Dispatch<React.SetStateAction<string[]>>; go: (screen: Screen) => void; email: string; saving: boolean; saveMessage: string; onSave: () => void; onSignOut: () => void }) {
   const session = React.useContext(SessionContext);
   const [newMember, setNewMember] = useState('');
   const addMember = () => {
@@ -185,16 +280,20 @@ function Profile({ name, setName, gotram, setGotram, familyMembers, setFamilyMem
     setNewMember('');
   };
   return <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled"><Header title="Family Profile" />
+    {email ? <Text style={s.signedInAs}>Signed in as {email}</Text> : null}
     <Text style={s.profileSectionTitle}>Primary devotee</Text>
     <Text style={s.inputLabel}>NAME</Text><TextInput value={name} onChangeText={setName} style={s.input} placeholder="Your name" />
     <Text style={s.inputLabel}>GOTRAM</Text><TextInput value={gotram} onChangeText={setGotram} style={s.input} placeholder="Your Gotram" />
-    <Text style={s.inputLabel}>LOCATION</Text><TextInput defaultValue="Hyderabad, Telangana" style={s.input} />
+    <Text style={s.inputLabel}>LOCATION</Text><TextInput value={location} onChangeText={setLocation} placeholder="City, State or Country" style={s.input} />
     <View style={s.familyHeader}><View><Text style={s.profileSectionTitle}>Family members</Text><Text style={s.familyHelp}>Add every name to include in family Poojas</Text></View><View style={s.memberCount}><Text style={s.memberCountText}>{familyMembers.length}</Text></View></View>
     {familyMembers.length === 0 && <View style={s.emptyFamily}><Text style={s.emptyFamilyIcon}>♙</Text><Text style={s.emptyFamilyText}>No family members added yet</Text></View>}
     {familyMembers.map((member, index) => <View key={`${member}-${index}`} style={s.familyRow}><View style={s.familyAvatar}><Text style={s.familyAvatarText}>{member.trim().slice(0, 1).toUpperCase() || '?'}</Text></View><TextInput value={member} onChangeText={value => setFamilyMembers(members => members.map((item, itemIndex) => itemIndex === index ? value : item))} style={s.familyNameInput} placeholder="Family member name" /><Pressable style={s.removeMember} onPress={() => setFamilyMembers(members => members.filter((_, itemIndex) => itemIndex !== index))}><Text style={s.removeMemberText}>×</Text></Pressable></View>)}
     <View style={s.addFamilyRow}><TextInput value={newMember} onChangeText={setNewMember} onSubmitEditing={addMember} returnKeyType="done" style={s.addFamilyInput} placeholder="Enter family member name" placeholderTextColor="#A98D7E" /><Pressable style={s.addMemberButton} onPress={addMember}><Text style={s.addMemberButtonText}>+ Add</Text></Pressable></View>
     <View style={s.verified}><Text style={s.verifiedIcon}>✓</Text><View><Text style={s.cardTitle}>Your details</Text><Text style={s.cardBody}>Ready for future personalized audio</Text></View></View>
+    {saveMessage ? <Text style={s.authMessage}>{saveMessage}</Text> : null}
+    <Button label={saving ? 'Saving…' : 'Save profile'} onPress={() => { if (!saving) onSave(); }} />
     <Button label="Listen to Vinayaka Pooja demo" onPress={() => { session.choose('Vinayaka Pooja'); go('guide'); }} />
+    {isSupabaseConfigured && <Button secondary label="Sign out" onPress={onSignOut} />}
   </ScrollView>;
 }
 
@@ -206,18 +305,100 @@ function Nav({ screen, go }: { screen: Screen; go: (screen: Screen) => void }) {
 export default function App() {
   const [poojaTitle, setPoojaTitle] = useState('Daily Pooja');
   const demoScreen = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('screen') as Screen | null : null;
-  const [screen, setScreen] = useState<Screen>(demoScreen ?? 'login'); const [name, setName] = useState('Prashanth Kumar'); const [gotram, setGotram] = useState('Amarushi'); const [familyMembers, setFamilyMembers] = useState<string[]>([]);
+  const [screen, setScreen] = useState<Screen>('login');
+  const [name, setName] = useState('Prashanth Kumar');
+  const [gotram, setGotram] = useState('Amarushi');
+  const [location, setLocation] = useState('Hyderabad, Telangana');
+  const [familyMembers, setFamilyMembers] = useState<string[]>([]);
+  const [authReady, setAuthReady] = useState(!isSupabaseConfigured);
+  const [authUserId, setAuthUserId] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
   const omPlayer = useAudioPlayer(require('./assets/om-background.wav'));
   const omStatus = useAudioPlayerStatus(omPlayer);
   useEffect(() => { omPlayer.loop = true; omPlayer.volume = 0.22; }, [omPlayer]);
+
+  useEffect(() => {
+    const client = supabase;
+    if (!client) return;
+    let active = true;
+
+    const applyUser = async (user: { id: string; email?: string; phone?: string; user_metadata?: Record<string, unknown> } | null) => {
+      if (!active) return;
+      if (!user) {
+        setAuthUserId('');
+        setAuthEmail('');
+        setFamilyMembers([]);
+        setScreen('login');
+        setAuthReady(true);
+        return;
+      }
+
+      setAuthUserId(user.id);
+      setAuthEmail(user.email ?? user.phone ?? '');
+      const [{ data: profile }, { data: family }] = await Promise.all([
+        client.from('profiles').select('full_name, gotram, city').eq('id', user.id).maybeSingle(),
+        client.from('family_members').select('full_name').eq('user_id', user.id).order('display_order'),
+      ]);
+      if (!active) return;
+      const metadataName = typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : '';
+      const metadataGotram = typeof user.user_metadata?.gotram === 'string' ? user.user_metadata.gotram : '';
+      setName(profile?.full_name || metadataName || 'Devotee');
+      setGotram(profile?.gotram || metadataGotram || '');
+      setLocation(profile?.city || 'Hyderabad, Telangana');
+      setFamilyMembers((family ?? []).map(member => member.full_name));
+      setScreen(demoScreen ?? 'home');
+      setAuthReady(true);
+    };
+
+    void client.auth.getSession().then(({ data }) => applyUser(data.session?.user ?? null));
+    const { data: listener } = client.auth.onAuthStateChange((_event, session) => {
+      void applyUser(session?.user ?? null);
+    });
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [demoScreen]);
+
   const toggleOm = () => omStatus.playing ? omPlayer.pause() : omPlayer.play();
-  let page = <Login onContinue={(nextName, nextGotram) => { setName(nextName); setGotram(nextGotram); setScreen('home'); }} />;
+  const saveProfile = async () => {
+    setProfileMessage('');
+    if (!supabase || !authUserId) {
+      setProfileMessage('Local demo changes are saved only for this session.');
+      return;
+    }
+    setProfileSaving(true);
+    const { error: profileError } = await supabase.from('profiles').upsert({
+      id: authUserId,
+      full_name: name.trim(),
+      gotram: gotram.trim(),
+      city: location.trim(),
+    });
+    const cleanFamily = familyMembers.map(member => member.trim()).filter(Boolean);
+    const { error: familyError } = profileError
+      ? { error: null }
+      : await supabase.rpc('replace_family_members', { member_names: cleanFamily });
+    setProfileSaving(false);
+    const error = profileError ?? familyError;
+    setProfileMessage(error ? error.message : 'Profile and family members saved securely.');
+  };
+  const signOut = async () => {
+    if (!supabase) return;
+    setProfileMessage('');
+    await supabase.auth.signOut();
+  };
+
+  let page = <Login onDemoContinue={(nextName, nextGotram) => { setName(nextName); setGotram(nextGotram); setScreen(demoScreen ?? 'home'); }} />;
+  if (!authReady) page = <View style={s.authLoading}><ActivityIndicator size="large" color="#96351F" /><Text style={s.loginBody}>Restoring your secure session…</Text></View>;
   if (screen === 'home') page = <Home go={setScreen} omPlaying={omStatus.playing} toggleOm={toggleOm} />;
   if (screen === 'services') page = <Services go={setScreen} />;
   if (screen === 'calendar') page = <Calendar />;
   if (screen === 'prepare') page = <Prepare go={setScreen} />;
   if (screen === 'payment') page = <Payment go={setScreen} />;
   if (screen === 'guide') page = <Guide key={poojaTitle} go={setScreen} name={name} gotram={gotram} />;
-  if (screen === 'profile') page = <Profile go={setScreen} name={name} setName={setName} gotram={gotram} setGotram={setGotram} familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} />;
-  return <SessionContext.Provider value={{ title: poojaTitle, choose: setPoojaTitle, family: familyMembers }}><SafeAreaView style={s.safe}><StatusBar style="dark" /><View style={s.page}>{page}</View><Nav screen={screen} go={setScreen} /></SafeAreaView></SessionContext.Provider>;
+  if (screen === 'profile') page = <Profile go={setScreen} name={name} setName={setName} gotram={gotram} setGotram={setGotram} location={location} setLocation={setLocation} familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} email={authEmail} saving={profileSaving} saveMessage={profileMessage} onSave={() => { void saveProfile(); }} onSignOut={() => { void signOut(); }} />;
+  const showNavigation = authReady && screen !== 'login';
+  return <SessionContext.Provider value={{ title: poojaTitle, choose: setPoojaTitle, family: familyMembers }}><SafeAreaView style={s.safe}><StatusBar style="dark" /><View style={s.page}>{page}</View>{showNavigation && <Nav screen={screen} go={setScreen} />}</SafeAreaView></SessionContext.Provider>;
 }
