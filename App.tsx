@@ -8,8 +8,9 @@ import { isSupabaseConfigured, supabase } from './src/supabase';
 import { styles as s } from './src/theme';
 import Calendar from './src/Calendar';
 import CaptchaGate, { type CaptchaGateHandle } from './src/CaptchaGate';
+import AdminPooja from './src/AdminPooja';
 
-type Screen = 'login' | 'home' | 'services' | 'calendar' | 'prepare' | 'payment' | 'guide' | 'profile';
+type Screen = 'login' | 'home' | 'services' | 'calendar' | 'prepare' | 'payment' | 'guide' | 'profile' | 'admin';
 type LoginRegion = 'india' | 'international';
 const brandLogo = require('./assets/branding/divya-pooja-full-logo-white-gold-512.png');
 const SessionContext = React.createContext({ title: 'Daily Pooja', choose: (title: string) => {}, family: [] as string[] });
@@ -263,7 +264,7 @@ function Guide({ go, name, gotram }: { go: (screen: Screen) => void; name: strin
   </ScrollView>;
 }
 
-function Profile({ name, setName, gotram, setGotram, location, setLocation, familyMembers, setFamilyMembers, go, email, saving, saveMessage, onSave, onSignOut }: { name: string; setName: (x: string) => void; gotram: string; setGotram: (x: string) => void; location: string; setLocation: (x: string) => void; familyMembers: string[]; setFamilyMembers: React.Dispatch<React.SetStateAction<string[]>>; go: (screen: Screen) => void; email: string; saving: boolean; saveMessage: string; onSave: () => void; onSignOut: () => void }) {
+function Profile({ name, setName, gotram, setGotram, location, setLocation, familyMembers, setFamilyMembers, go, email, saving, saveMessage, onSave, onSignOut, isAdmin }: { name: string; setName: (x: string) => void; gotram: string; setGotram: (x: string) => void; location: string; setLocation: (x: string) => void; familyMembers: string[]; setFamilyMembers: React.Dispatch<React.SetStateAction<string[]>>; go: (screen: Screen) => void; email: string; saving: boolean; saveMessage: string; onSave: () => void; onSignOut: () => void; isAdmin: boolean }) {
   const session = React.useContext(SessionContext);
   const [newMember, setNewMember] = useState('');
   const addMember = () => {
@@ -286,6 +287,7 @@ function Profile({ name, setName, gotram, setGotram, location, setLocation, fami
     {saveMessage ? <Text style={s.authMessage}>{saveMessage}</Text> : null}
     <Button label={saving ? 'Saving…' : 'Save profile'} onPress={() => { if (!saving) onSave(); }} />
     <Button label="Listen to Vinayaka Pooja demo" onPress={() => { session.choose('Vinayaka Pooja'); go('guide'); }} />
+    {isAdmin && <View style={s.adminProfileCard}><View style={s.grow}><Text style={s.cardTitle}>Pooja Content Studio</Text><Text style={s.cardBody}>Upload audio, images and Samagri, then schedule publication</Text></View><Pressable style={s.adminProfileButton} onPress={() => go('admin')}><Text style={s.adminProfileButtonText}>Open admin</Text></Pressable></View>}
     {isSupabaseConfigured && <Button secondary label="Sign out" onPress={onSignOut} />}
   </ScrollView>;
 }
@@ -306,6 +308,7 @@ export default function App() {
   const [authReady, setAuthReady] = useState(!isSupabaseConfigured);
   const [authUserId, setAuthUserId] = useState('');
   const [authEmail, setAuthEmail] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
   const omPlayer = useAudioPlayer(require('./assets/om-background.wav'));
@@ -322,6 +325,7 @@ export default function App() {
       if (!user) {
         setAuthUserId('');
         setAuthEmail('');
+        setIsAdmin(false);
         setFamilyMembers([]);
         setScreen('login');
         setAuthReady(true);
@@ -330,9 +334,10 @@ export default function App() {
 
       setAuthUserId(user.id);
       setAuthEmail(user.email ?? user.phone ?? '');
-      const [{ data: profile }, { data: family }] = await Promise.all([
+      const [{ data: profile }, { data: family }, { data: admin }] = await Promise.all([
         client.from('profiles').select('full_name, gotram, city').eq('id', user.id).maybeSingle(),
         client.from('family_members').select('full_name').eq('user_id', user.id).order('display_order'),
+        client.from('app_admins').select('user_id').eq('user_id', user.id).maybeSingle(),
       ]);
       if (!active) return;
       const metadataName = typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : '';
@@ -341,7 +346,9 @@ export default function App() {
       setGotram(profile?.gotram || metadataGotram || '');
       setLocation(profile?.city || 'Hyderabad, Telangana');
       setFamilyMembers((family ?? []).map(member => member.full_name));
-      setScreen(demoScreen ?? 'home');
+      const adminAccess = Boolean(admin?.user_id);
+      setIsAdmin(adminAccess);
+      setScreen(demoScreen === 'admin' && !adminAccess ? 'home' : (demoScreen ?? 'home'));
       setAuthReady(true);
     };
 
@@ -391,7 +398,8 @@ export default function App() {
   if (screen === 'prepare') page = <Prepare go={setScreen} />;
   if (screen === 'payment') page = <Payment go={setScreen} />;
   if (screen === 'guide') page = <Guide key={poojaTitle} go={setScreen} name={name} gotram={gotram} />;
-  if (screen === 'profile') page = <Profile go={setScreen} name={name} setName={setName} gotram={gotram} setGotram={setGotram} location={location} setLocation={setLocation} familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} email={authEmail} saving={profileSaving} saveMessage={profileMessage} onSave={() => { void saveProfile(); }} onSignOut={() => { void signOut(); }} />;
+  if (screen === 'profile') page = <Profile go={setScreen} name={name} setName={setName} gotram={gotram} setGotram={setGotram} location={location} setLocation={setLocation} familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} email={authEmail} saving={profileSaving} saveMessage={profileMessage} onSave={() => { void saveProfile(); }} onSignOut={() => { void signOut(); }} isAdmin={isAdmin} />;
+  if (screen === 'admin') page = isAdmin ? <AdminPooja userId={authUserId} onBack={() => setScreen('profile')} /> : <View style={s.authLoading}><Text style={s.loginTitle}>Admin access required</Text><Text style={s.loginBody}>This page is available only to approved Divya Pooja administrators.</Text><Button label="Back to profile" onPress={() => setScreen('profile')} /></View>;
   const showNavigation = authReady && screen !== 'login';
   return <SessionContext.Provider value={{ title: poojaTitle, choose: setPoojaTitle, family: familyMembers }}><SafeAreaView style={s.safe}><StatusBar style="dark" /><View style={s.page}>{page}</View>{showNavigation && <Nav screen={screen} go={setScreen} />}</SafeAreaView></SessionContext.Provider>;
 }

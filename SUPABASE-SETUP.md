@@ -38,3 +38,17 @@ npx expo start --clear
 5. In Supabase Table Editor, verify rows exist in `profiles` and `family_members`.
 
 The SQL enables Row Level Security. Authenticated users can read and modify only their own profile and family members.
+
+## Admin content setup
+
+1. In **SQL Editor**, run `supabase/migrations/202609170001_admin_content.sql` once.
+2. In **Authentication → Users**, copy the user ID for the owner account.
+3. In **SQL Editor**, make that account an administrator:
+
+```sql
+insert into public.app_admins (user_id)
+values ('PASTE-OWNER-USER-ID-HERE')
+on conflict (user_id) do nothing;
+```
+
+The Profile screen then shows **Pooja Content Studio** for that approved account. Pooja drafts, Samagri and private media uploads are protected by Row Level Security and Storage policies.
