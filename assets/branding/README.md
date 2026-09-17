@@ -18,6 +18,9 @@
 | `divya-pooja-app-icon-white-gold-512.png` | Revised 512 px Google Play icon candidate |
 | `divya-pooja-app-icon-white-gold-48.png` | Final white-background browser favicon |
 | `divya-pooja-app-icon-white-gold-32.png` | Final compact browser favicon |
+| `divya-pooja-full-logo-white-gold-master.png` | Approved full logo lockup with name and tagline |
+| `divya-pooja-full-logo-white-gold-1024.png` | Large website and presentation logo |
+| `divya-pooja-full-logo-white-gold-512.png` | App login and header logo |
 
 ## Final production additions
 
