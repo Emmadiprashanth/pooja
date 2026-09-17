@@ -32,17 +32,15 @@ function Header({ title, onBack }: { title?: string; onBack?: () => void }) {
   return <View style={s.header}>
     {onBack ? <Pressable onPress={onBack} style={s.back}><Text style={s.backText}>‹</Text></Pressable> : <View style={s.logo}><Text style={s.logoText}>DP</Text></View>}
     <View style={s.headerCopy}><Text style={s.headerTitle}>{title ?? 'Divya Pooja'}</Text>{!title && <Text style={s.headerSubtitle}>Your Pooja · Your Guide</Text>}</View>
-    <View style={s.avatar}><Text style={s.avatarText}>PS</Text></View>
+    <View style={s.avatar}><Text style={s.avatarText}>ॐ</Text></View>
   </View>;
 }
 
-function Login({ onDemoContinue }: { onDemoContinue: (name: string, gotram: string) => void }) {
+function Login({ onDemoContinue }: { onDemoContinue: () => void }) {
   const captchaRef = useRef<CaptchaGateHandle>(null);
   const [register, setRegister] = useState(true);
   const [suggestedRegion] = useState<LoginRegion>(suggestLoginRegion);
   const [region, setRegion] = useState<LoginRegion>(suggestedRegion);
-  const [name, setName] = useState('Prashanth Kumar');
-  const [gotram, setGotram] = useState('Amarushi');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -55,7 +53,7 @@ function Login({ onDemoContinue }: { onDemoContinue: (name: string, gotram: stri
   const sendOtp = async () => {
     setMessage('');
     if (!isSupabaseConfigured || !supabase) {
-      onDemoContinue(name.trim() || 'Prashanth Kumar', gotram.trim() || 'Amarushi');
+      onDemoContinue();
       return;
     }
     if (region === 'india' && phone.replace(/\D/g, '').length !== 10) {
@@ -64,10 +62,6 @@ function Login({ onDemoContinue }: { onDemoContinue: (name: string, gotram: stri
     }
     if (region === 'international' && !/^\S+@\S+\.\S+$/.test(email.trim())) {
       setMessage('Enter a valid email address.');
-      return;
-    }
-    if (register && !name.trim()) {
-      setMessage('Please enter your full name.');
       return;
     }
     if (!captchaSiteKey) {
@@ -85,7 +79,6 @@ function Login({ onDemoContinue }: { onDemoContinue: (name: string, gotram: stri
     }
     const options = {
       shouldCreateUser: register,
-      data: register ? { full_name: name.trim(), gotram: gotram.trim() } : undefined,
       captchaToken,
     };
     const result = region === 'india'
@@ -121,7 +114,6 @@ function Login({ onDemoContinue }: { onDemoContinue: (name: string, gotram: stri
     <View style={s.loginCard}><Text style={s.loginTitle}>{register ? 'Begin your Pooja journey' : 'Welcome back'}</Text><Text style={s.loginBody}>{isSupabaseConfigured ? 'Choose your region. We will send a one-time password—no password to remember.' : 'OTP authentication is ready. Connect Supabase to enable real accounts.'}</Text>
       {isSupabaseConfigured && <View style={s.authModeRow}><Pressable style={[s.authMode, region === 'india' && s.authModeActive]} onPress={() => { setRegion('india'); setOtpSent(false); setOtp(''); setMessage(''); }}><Text style={[s.authModeText, region === 'india' && s.authModeTextActive]}>🇮🇳 India</Text></Pressable><Pressable style={[s.authMode, region === 'international' && s.authModeActive]} onPress={() => { setRegion('international'); setOtpSent(false); setOtp(''); setMessage(''); }}><Text style={[s.authModeText, region === 'international' && s.authModeTextActive]}>🌍 International</Text></Pressable></View>}
       {isSupabaseConfigured && !otpSent && <Text style={s.note}>Suggested from this device: {suggestedRegion === 'india' ? 'India' : 'International'}. You can change it above.</Text>}
-      {register && !otpSent && <><Text style={s.inputLabel}>NAME</Text><TextInput value={name} onChangeText={setName} style={s.input} placeholder="Your full name" autoCapitalize="words" /><Text style={s.inputLabel}>GOTRAM</Text><TextInput value={gotram} onChangeText={setGotram} style={s.input} placeholder="Your Gotram" autoCapitalize="words" /></>}
       {isSupabaseConfigured && !otpSent && region === 'india' && <><Text style={s.inputLabel}>MOBILE NUMBER</Text><View style={s.phoneRow}><View style={s.phonePrefix}><Text style={s.phonePrefixText}>+91</Text></View><TextInput value={phone} onChangeText={value => setPhone(value.replace(/\D/g, '').slice(0, 10))} style={s.phoneInput} placeholder="10-digit mobile number" keyboardType="phone-pad" textContentType="telephoneNumber" /></View></>}
       {isSupabaseConfigured && !otpSent && region === 'international' && <><Text style={s.inputLabel}>EMAIL</Text><TextInput value={email} onChangeText={setEmail} style={s.input} placeholder="you@example.com" autoCapitalize="none" autoCorrect={false} keyboardType="email-address" textContentType="emailAddress" /></>}
       {isSupabaseConfigured && otpSent && <><Text style={s.inputLabel}>ONE-TIME PASSWORD</Text><TextInput value={otp} onChangeText={value => setOtp(value.replace(/\D/g, '').slice(0, otpLength))} style={[s.input, s.otpInput]} placeholder={`${otpLength}-digit OTP`} keyboardType="number-pad" textContentType="oneTimeCode" maxLength={otpLength} /><Pressable onPress={() => { setOtpSent(false); setOtp(''); setMessage(''); }}><Text style={s.loginSwitch}>Change {region === 'india' ? 'mobile number' : 'email address'}</Text></Pressable></>}
@@ -306,8 +298,8 @@ export default function App() {
   const [poojaTitle, setPoojaTitle] = useState('Daily Pooja');
   const demoScreen = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('screen') as Screen | null : null;
   const [screen, setScreen] = useState<Screen>('login');
-  const [name, setName] = useState('Prashanth Kumar');
-  const [gotram, setGotram] = useState('Amarushi');
+  const [name, setName] = useState('');
+  const [gotram, setGotram] = useState('');
   const [location, setLocation] = useState('Hyderabad, Telangana');
   const [familyMembers, setFamilyMembers] = useState<string[]>([]);
   const [authReady, setAuthReady] = useState(!isSupabaseConfigured);
@@ -344,7 +336,7 @@ export default function App() {
       if (!active) return;
       const metadataName = typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : '';
       const metadataGotram = typeof user.user_metadata?.gotram === 'string' ? user.user_metadata.gotram : '';
-      setName(profile?.full_name || metadataName || 'Devotee');
+      setName(profile?.full_name || metadataName || '');
       setGotram(profile?.gotram || metadataGotram || '');
       setLocation(profile?.city || 'Hyderabad, Telangana');
       setFamilyMembers((family ?? []).map(member => member.full_name));
@@ -390,7 +382,7 @@ export default function App() {
     await supabase.auth.signOut();
   };
 
-  let page = <Login onDemoContinue={(nextName, nextGotram) => { setName(nextName); setGotram(nextGotram); setScreen(demoScreen ?? 'home'); }} />;
+  let page = <Login onDemoContinue={() => { setName(''); setGotram(''); setScreen(demoScreen ?? 'home'); }} />;
   if (!authReady) page = <View style={s.authLoading}><ActivityIndicator size="large" color="#96351F" /><Text style={s.loginBody}>Restoring your secure session…</Text></View>;
   if (screen === 'home') page = <Home go={setScreen} omPlaying={omStatus.playing} toggleOm={toggleOm} />;
   if (screen === 'services') page = <Services go={setScreen} />;

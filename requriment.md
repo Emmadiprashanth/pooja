@@ -96,7 +96,7 @@ Acceptance: participants heard in the recording match the confirmed session list
 - [ ] PROFILE-04 — P0 — Implement registration/login and associate subscriptions and notification preferences with the correct account. Status: Partial; mobile/email OTP authentication and account-linked profile data are connected, but subscriptions and notification preferences are not.
 - [ ] PROFILE-05 — P1 — Provide account deletion and appropriate privacy controls. Status: Planned.
 
-Existing primary demo values: Prashanth Kumar / Amarushi. Do not invent family member names.
+Do not prefill a user's name or Gotram. Users add these details from Profile after their first OTP login.
 Login method and whether each saved family member needs a separate Gotram remain open decisions.
 
 ## 6. Location-specific Telugu calendar

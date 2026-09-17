@@ -18,8 +18,8 @@ export const samagriIllustrations = ['🛕', '🌾', '🌸', '🍎', '🥣', '�
 export const vinayakaPooja = {
   title: 'Vinayaka Pooja',
   day: 'Wednesday',
-  participant: 'Prashanth Kumar',
-  gotram: 'Amarushi',
+  participant: '',
+  gotram: '',
   subtitles: [
     'Maarjanamu: Om apavitrah pavitrovaa sarvaavasthaam gato pivaa yah smaret Pundareekaaksham sabaahyaabhyantara shuchih.',
     'Ganapati / Guru Praarthana: Shuklaambaradharam Vishnum… sarva vighnopashaantaye.',
