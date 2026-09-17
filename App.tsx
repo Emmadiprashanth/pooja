@@ -11,6 +11,7 @@ import CaptchaGate, { type CaptchaGateHandle } from './src/CaptchaGate';
 
 type Screen = 'login' | 'home' | 'services' | 'calendar' | 'prepare' | 'payment' | 'guide' | 'profile';
 type LoginRegion = 'india' | 'international';
+const brandIcon = require('./assets/branding/divya-pooja-app-icon-white-gold-512.png');
 const SessionContext = React.createContext({ title: 'Daily Pooja', choose: (title: string) => {}, family: [] as string[] });
 
 function suggestLoginRegion(): LoginRegion {
@@ -30,7 +31,7 @@ function Button({ label, onPress, secondary = false }: { label: string; onPress:
 
 function Header({ title, onBack }: { title?: string; onBack?: () => void }) {
   return <View style={s.header}>
-    {onBack ? <Pressable onPress={onBack} style={s.back}><Text style={s.backText}>‹</Text></Pressable> : <View style={s.logo}><Text style={s.logoText}>DP</Text></View>}
+    {onBack ? <Pressable onPress={onBack} style={s.back}><Text style={s.backText}>‹</Text></Pressable> : <View style={s.logo}><Image accessibilityLabel="Divya Pooja logo" source={brandIcon} style={s.logoImage} resizeMode="contain" /></View>}
     <View style={s.headerCopy}><Text style={s.headerTitle}>{title ?? 'Divya Pooja'}</Text>{!title && <Text style={s.headerSubtitle}>Your Pooja · Your Guide</Text>}</View>
     <View style={s.avatar}><Text style={s.avatarText}>ॐ</Text></View>
   </View>;
@@ -110,7 +111,7 @@ function Login({ onDemoContinue }: { onDemoContinue: () => void }) {
     setMessage('OTP verified. Signing you in…');
   };
   return <ScrollView contentContainerStyle={s.loginContent} keyboardShouldPersistTaps="handled">
-    <View style={s.loginBrand}><View style={s.logo}><Text style={s.logoText}>DP</Text></View><Text style={s.loginBrandName}>Divya Pooja</Text><Text style={s.loginTagline}>Your Pooja · Your Guide</Text></View>
+    <View style={s.loginBrand}><Image accessibilityLabel="Divya Pooja logo" source={brandIcon} style={s.loginLogoImage} resizeMode="contain" /><Text style={s.loginBrandName}>DIVYA POOJA</Text><Text style={s.loginTagline}>Your Pooja, Your Guide</Text></View>
     <View style={s.loginCard}><Text style={s.loginTitle}>{register ? 'Begin your Pooja journey' : 'Welcome back'}</Text><Text style={s.loginBody}>{isSupabaseConfigured ? 'Choose your region. We will send a one-time password—no password to remember.' : 'OTP authentication is ready. Connect Supabase to enable real accounts.'}</Text>
       {isSupabaseConfigured && <View style={s.authModeRow}><Pressable style={[s.authMode, region === 'india' && s.authModeActive]} onPress={() => { setRegion('india'); setOtpSent(false); setOtp(''); setMessage(''); }}><Text style={[s.authModeText, region === 'india' && s.authModeTextActive]}>🇮🇳 India</Text></Pressable><Pressable style={[s.authMode, region === 'international' && s.authModeActive]} onPress={() => { setRegion('international'); setOtpSent(false); setOtp(''); setMessage(''); }}><Text style={[s.authModeText, region === 'international' && s.authModeTextActive]}>🌍 International</Text></Pressable></View>}
       {isSupabaseConfigured && !otpSent && <Text style={s.note}>Suggested from this device: {suggestedRegion === 'india' ? 'India' : 'International'}. You can change it above.</Text>}
