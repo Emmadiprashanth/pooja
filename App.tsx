@@ -9,6 +9,8 @@ import { styles as s } from './src/theme';
 import Calendar from './src/Calendar';
 import CaptchaGate, { type CaptchaGateHandle } from './src/CaptchaGate';
 import AdminPooja from './src/AdminPooja';
+import PublishedPoojaGuide from './src/PublishedPoojaGuide';
+import { loadPublishedPoojas, type PublishedPooja } from './src/content';
 
 type Screen = 'login' | 'home' | 'services' | 'calendar' | 'prepare' | 'payment' | 'guide' | 'profile' | 'admin';
 type LoginRegion = 'india' | 'international';
@@ -165,11 +167,39 @@ function Home({ go, omPlaying, toggleOm }: { go: (screen: Screen) => void; omPla
   </ScrollView>;
 }
 
-function Services({ go }: { go: (screen: Screen) => void }) {
+function Services({ go, openPublished }: { go: (screen: Screen) => void; openPublished: (pooja: PublishedPooja) => void }) {
   const session = React.useContext(SessionContext);
+  const [published, setPublished] = useState<PublishedPooja[]>([]);
+  const [loadingPublished, setLoadingPublished] = useState(isSupabaseConfigured);
+  const [publishedMessage, setPublishedMessage] = useState('');
   const openPooja = (title: string) => { session.choose(title); go('guide'); };
+  useEffect(() => {
+    let active = true;
+    if (!isSupabaseConfigured) return () => { active = false; };
+    void loadPublishedPoojas().then(items => {
+      if (!active) return;
+      setPublished(items);
+      setLoadingPublished(false);
+    }).catch(error => {
+      if (!active) return;
+      setPublishedMessage(error instanceof Error ? error.message : 'Unable to load published Poojas.');
+      setLoadingPublished(false);
+    });
+    return () => { active = false; };
+  }, []);
+  const categoryLabel = (category: PublishedPooja['category']) => ({ daily: 'Daily', day_wise: 'Day-wise', festival: 'Festival', special: 'Special' })[category];
   return <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
     <Header title="Pooja Services" /><Text style={s.intro}>Choose the Pooja you want to perform</Text>
+    {isSupabaseConfigured ? <>
+      <Section title="Available now" link="Published from Admin Studio" />
+      {loadingPublished ? <View style={s.publishedLoading}><ActivityIndicator color="#96351F" /><Text style={s.cardBody}>Loading published Poojas…</Text></View> : null}
+      {publishedMessage ? <Text style={s.authMessage}>{publishedMessage}</Text> : null}
+      {!loadingPublished && !publishedMessage && published.length === 0 ? <View style={s.publishedEmpty}><Text style={s.cardTitle}>No newly published Poojas yet</Text><Text style={s.cardBody}>A Pooja appears here when it is published and its scheduled start time has arrived.</Text></View> : null}
+      {published.map(pooja => <Pressable key={pooja.id} style={s.publishedServiceRow} onPress={() => openPublished(pooja)}>
+        {pooja.imageUrl ? <Image source={{ uri: pooja.imageUrl }} accessibilityLabel={`${pooja.name} image`} style={s.publishedServiceImage} resizeMode="cover" /> : <View style={s.publishedServiceFallback}><Text style={s.controlIconText}>ॐ</Text></View>}
+        <View style={s.grow}><Text style={s.cardTitle}>{pooja.name}</Text><Text style={s.cardBody}>{categoryLabel(pooja.category)}{pooja.weekday ? ` · ${pooja.weekday}` : ''} · {pooja.language}</Text>{pooja.description ? <Text numberOfLines={2} style={s.cardBody}>{pooja.description}</Text> : null}<View style={s.tags}><Text style={s.tag}>{pooja.audioPath ? '🔊 Audio ready' : 'Audio coming soon'}</Text></View></View><Text style={s.chevron}>›</Text>
+      </Pressable>)}
+    </> : null}
     <Pressable style={s.featureCard} onPress={() => openPooja('Vinayaka Pooja')}><Icon value="🐘" photo={getPooja('Vinayaka Pooja').deityImage} title="Vinayaka Pooja" /><View style={s.grow}><Text style={s.cardTitle}>Vinayaka Pooja · Demo ready</Text><Text style={s.cardBody}>Wednesday Pooja with your recording and Samagri list</Text></View><Text style={s.chevron}>›</Text></Pressable>
     <Pressable style={s.featureCard} onPress={() => openPooja('Daily Pooja')}><Icon value="🪔" /><View style={s.grow}><Text style={s.cardTitle}>Daily Pooja</Text><Text style={s.cardBody}>Recording being prepared</Text></View><Text style={s.chevron}>›</Text></Pressable>
     <Section title="Day-wise Poojas" link="Monday–Sunday" />
@@ -299,6 +329,7 @@ function Nav({ screen, go }: { screen: Screen; go: (screen: Screen) => void }) {
 
 export default function App() {
   const [poojaTitle, setPoojaTitle] = useState('Daily Pooja');
+  const [publishedPooja, setPublishedPooja] = useState<PublishedPooja | null>(null);
   const demoScreen = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('screen') as Screen | null : null;
   const [screen, setScreen] = useState<Screen>('login');
   const [name, setName] = useState('');
@@ -393,13 +424,15 @@ export default function App() {
   let page = <Login onDemoContinue={() => { setName(''); setGotram(''); setScreen(demoScreen ?? 'home'); }} />;
   if (!authReady) page = <View style={s.authLoading}><ActivityIndicator size="large" color="#96351F" /><Text style={s.loginBody}>Restoring your secure session…</Text></View>;
   if (screen === 'home') page = <Home go={setScreen} omPlaying={omStatus.playing} toggleOm={toggleOm} />;
-  if (screen === 'services') page = <Services go={setScreen} />;
+  if (screen === 'services') page = <Services go={setScreen} openPublished={pooja => { setPublishedPooja(pooja); setScreen('guide'); }} />;
   if (screen === 'calendar') page = <Calendar />;
   if (screen === 'prepare') page = <Prepare go={setScreen} />;
   if (screen === 'payment') page = <Payment go={setScreen} />;
-  if (screen === 'guide') page = <Guide key={poojaTitle} go={setScreen} name={name} gotram={gotram} />;
+  if (screen === 'guide') page = publishedPooja
+    ? <PublishedPoojaGuide key={publishedPooja.id} pooja={publishedPooja} name={name} gotram={gotram} family={familyMembers} onBack={() => setScreen('services')} onComplete={() => { setPublishedPooja(null); setScreen('home'); }} />
+    : <Guide key={poojaTitle} go={setScreen} name={name} gotram={gotram} />;
   if (screen === 'profile') page = <Profile go={setScreen} name={name} setName={setName} gotram={gotram} setGotram={setGotram} location={location} setLocation={setLocation} familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} email={authEmail} saving={profileSaving} saveMessage={profileMessage} onSave={() => { void saveProfile(); }} onSignOut={() => { void signOut(); }} isAdmin={isAdmin} />;
   if (screen === 'admin') page = isAdmin ? <AdminPooja userId={authUserId} onBack={() => setScreen('profile')} /> : <View style={s.authLoading}><Text style={s.loginTitle}>Admin access required</Text><Text style={s.loginBody}>This page is available only to approved Divya Pooja administrators.</Text><Button label="Back to profile" onPress={() => setScreen('profile')} /></View>;
   const showNavigation = authReady && screen !== 'login';
-  return <SessionContext.Provider value={{ title: poojaTitle, choose: setPoojaTitle, family: familyMembers }}><SafeAreaView style={s.safe}><StatusBar style="dark" /><View style={s.page}>{page}</View>{showNavigation && <Nav screen={screen} go={setScreen} />}</SafeAreaView></SessionContext.Provider>;
+  return <SessionContext.Provider value={{ title: poojaTitle, choose: title => { setPublishedPooja(null); setPoojaTitle(title); }, family: familyMembers }}><SafeAreaView style={s.safe}><StatusBar style="dark" /><View style={s.page}>{page}</View>{showNavigation && <Nav screen={screen} go={setScreen} />}</SafeAreaView></SessionContext.Provider>;
 }

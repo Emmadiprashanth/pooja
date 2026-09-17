@@ -42,8 +42,9 @@ The SQL enables Row Level Security. Authenticated users can read and modify only
 ## Admin content setup
 
 1. In **SQL Editor**, run `supabase/migrations/202609170001_admin_content.sql` once.
-2. In **Authentication → Users**, copy the user ID for the owner account.
-3. In **SQL Editor**, make that account an administrator:
+2. Run `supabase/migrations/202609180001_published_media_read.sql` once. It lets signed-in customers load private media only when it belongs to a published Pooja that is currently visible.
+3. In **Authentication → Users**, copy the user ID for the owner account.
+4. In **SQL Editor**, make that account an administrator:
 
 ```sql
 insert into public.app_admins (user_id)
