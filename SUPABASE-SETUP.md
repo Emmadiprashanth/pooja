@@ -43,8 +43,9 @@ The SQL enables Row Level Security. Authenticated users can read and modify only
 
 1. In **SQL Editor**, run `supabase/migrations/202609170001_admin_content.sql` once.
 2. Run `supabase/migrations/202609180001_published_media_read.sql` once. It lets signed-in customers load private media only when it belongs to a published Pooja that is currently visible.
-3. In **Authentication → Users**, copy the user ID for the owner account.
-4. In **SQL Editor**, make that account an administrator:
+3. Run `supabase/migrations/202609180002_location_panchangam.sql` once. It creates the reviewed annual Panchangam store with global, country, timezone and city scopes.
+4. In **Authentication → Users**, copy the user ID for the owner account.
+5. In **SQL Editor**, make that account an administrator:
 
 ```sql
 insert into public.app_admins (user_id)
@@ -53,3 +54,5 @@ on conflict (user_id) do nothing;
 ```
 
 The Profile screen then shows **Pooja Content Studio** for that approved account. Pooja drafts, Samagri and private media uploads are protected by Row Level Security and Storage policies.
+
+Calendar location search uses Open-Meteo/GeoNames. Solar and moon timings use Sunrise-Sunset.org and are calculated for the selected coordinates and date. Tithi, Nakshatram, Yogam, Karanam and festival names appear only from published rows with a review timestamp in `panchangam_days`.

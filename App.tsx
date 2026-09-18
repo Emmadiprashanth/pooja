@@ -425,7 +425,7 @@ export default function App() {
   if (!authReady) page = <View style={s.authLoading}><ActivityIndicator size="large" color="#96351F" /><Text style={s.loginBody}>Restoring your secure session…</Text></View>;
   if (screen === 'home') page = <Home go={setScreen} omPlaying={omStatus.playing} toggleOm={toggleOm} />;
   if (screen === 'services') page = <Services go={setScreen} openPublished={pooja => { setPublishedPooja(pooja); setScreen('guide'); }} />;
-  if (screen === 'calendar') page = <Calendar />;
+  if (screen === 'calendar') page = <Calendar userId={authUserId} savedLocation={location} onLocationSaved={setLocation} />;
   if (screen === 'prepare') page = <Prepare go={setScreen} />;
   if (screen === 'payment') page = <Payment go={setScreen} />;
   if (screen === 'guide') page = publishedPooja
