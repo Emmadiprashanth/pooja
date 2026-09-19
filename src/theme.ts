@@ -11,31 +11,41 @@ export const colors = {
   pale: '#FFF0DA',
   border: '#ECD7C7',
   green: '#3B7652',
+  // Deeper tones for the gradients. The hero used to be one flat orange; a dawn ramp from
+  // saffron to vermilion gives it the depth of a lit surface rather than a printed swatch.
+  saffron: '#E8792B',
+  vermilion: '#B33C12',
+  ember: '#7E2A10',
+  goldLight: '#FFE1A0',
+  goldDeep: '#D9A038',
 };
+
+/** Warm dawn, for the hero and other lit surfaces. */
+export const HERO_GRADIENT = ['#E8792B', '#C9481A', '#9E3210'] as const;
+/** A barely-there warm wash for the page itself, so the background is not dead flat. */
+export const PAGE_GRADIENT = ['#FFFCF6', '#FFF6E9'] as const;
 
 export const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  page: { flex: 1 },
   content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 28 },
-  header: { flexDirection: 'row', alignItems: 'center', minHeight: 46, marginBottom: 15 },
-  logo: { width: 40, height: 40, borderRadius: 13, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' },
-  logoText: { color: colors.surface, fontSize: 19, fontWeight: '900' },
-  headerCopy: { flex: 1, marginLeft: 10 },
-  headerTitle: { color: colors.ink, fontSize: 18, fontWeight: '900' },
-  headerSubtitle: { color: colors.muted, fontSize: 10, marginTop: 2 },
   avatar: { width: 38, height: 38, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: colors.red, fontWeight: '800' },
-  back: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backText: { color: colors.ink, fontSize: 34, lineHeight: 35 },
-  date: { color: colors.muted, fontSize: 12, marginBottom: 14 },
-  dateStrong: { color: colors.ink, fontWeight: '800' },
-  hero: { minHeight: 202, borderRadius: 24, padding: 20, backgroundColor: colors.orange, overflow: 'hidden' },
+  hero: { minHeight: 236, borderRadius: 26, overflow: 'hidden' },
+  heroFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  heroInner: { padding: 22, paddingTop: 26, minHeight: 236 },
   eyebrow: { color: '#FFE4D4', fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   heroTitle: { color: colors.surface, fontSize: 28, fontWeight: '900', marginTop: 8 },
   heroBody: { color: '#FFF2EB', fontSize: 13, lineHeight: 20, marginTop: 5, maxWidth: 270 },
   heroButton: { alignSelf: 'flex-start', marginTop: 18, borderRadius: 14, paddingHorizontal: 15, paddingVertical: 12, backgroundColor: colors.gold },
   heroButtonText: { color: '#642410', fontSize: 13, fontWeight: '900' },
-  om: { position: 'absolute', right: 14, bottom: -29, color: 'rgba(255,255,255,0.14)', fontSize: 96, fontWeight: '800' },
+  om: { position: 'absolute', right: 16, bottom: -26, color: 'rgba(255,255,255,0.17)', fontSize: 92, fontWeight: '800' },
+  heroMandala: { position: 'absolute', right: -44, top: -40 },
+  heroDiya: { position: 'absolute', right: 20, bottom: 16 },
+  kolamWrap: { alignItems: 'center', marginTop: 18, marginBottom: 2 },
+  moonRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 },
+  moonCaption: { color: colors.muted, fontSize: 10, lineHeight: 14, flex: 1 },
+  deityHalo: { alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginTop: 6 },
+  playHalo: { alignItems: 'center', justifyContent: 'center', marginTop: 4 },
   section: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginBottom: 10 },
   sectionTitle: { color: colors.ink, fontSize: 15, fontWeight: '900' },
   sectionLink: { color: '#A35D3B', fontSize: 11, fontWeight: '700' },
@@ -57,7 +67,7 @@ export const styles = StyleSheet.create({
   miniPlayOn: { backgroundColor: colors.green },
   miniPlayText: { color: colors.surface, fontSize: 13, fontWeight: '900' },
   featureCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 20, padding: 15, marginBottom: 4, backgroundColor: '#FFF1D8', borderWidth: 1, borderColor: colors.gold },
-  compactRow: { minHeight: 55, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#EEDFD3', backgroundColor: colors.surface, paddingHorizontal: 11 },
+  compactRow: { minHeight: 56, flexDirection: 'row', alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#EBDACD', paddingHorizontal: 13 },
   dayBadge: { width: 38, color: colors.red, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
   listEmoji: { width: 34, fontSize: 19 },
   listTitle: { flex: 1, color: colors.ink, fontSize: 13, fontWeight: '800' },
@@ -75,6 +85,7 @@ export const styles = StyleSheet.create({
   calendarCard: { borderRadius: 22, padding: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   calendarGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   calendarCell: { width: '14.2857%', height: 47, alignItems: 'center', justifyContent: 'center' },
+  calendarCellFill: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   weekDay: { color: colors.muted, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
   dateCircle: { width: 38, height: 38, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   dateSelected: { backgroundColor: colors.red },
@@ -95,22 +106,16 @@ export const styles = StyleSheet.create({
   legendDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.orange, marginRight: 7 },
   deity: { width: 92, height: 92, borderRadius: 30, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginTop: 4, backgroundColor: colors.gold },
   deityText: { fontSize: 47 },
-  centerTitle: { color: colors.ink, textAlign: 'center', fontSize: 22, fontWeight: '900', marginTop: 14 },
   centerBody: { color: colors.muted, textAlign: 'center', fontSize: 11, marginTop: 5 },
   progress: { height: 7, borderRadius: 10, backgroundColor: '#EEDFD3', marginTop: 20, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 10, backgroundColor: colors.orange },
-  checkRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: '#F0E2D8' },
+  checkRow: { minHeight: 52, flexDirection: 'row', alignItems: 'center', paddingVertical: 13, paddingHorizontal: 13, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#EBDACD' },
   checkbox: { width: 21, height: 21, borderRadius: 6, borderWidth: 1.5, borderColor: '#CCAA96', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   checkboxOn: { backgroundColor: colors.red, borderColor: colors.red },
   checkmark: { color: colors.surface, fontWeight: '900', fontSize: 13 },
   checkText: { color: colors.ink, fontSize: 13, flex: 1 },
-  button: { flex: 1, minHeight: 48, borderRadius: 15, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, marginTop: 18 },
-  buttonText: { color: colors.surface, fontWeight: '900', fontSize: 13, textAlign: 'center' },
-  secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  secondaryText: { color: colors.red },
-  pressed: { opacity: 0.72, transform: [{ scale: 0.99 }] },
   price: { color: colors.red, textAlign: 'center', fontSize: 35, fontWeight: '900', marginTop: 15 },
-  plan: { flexDirection: 'row', alignItems: 'center', borderWidth: 2, borderColor: colors.border, borderRadius: 18, padding: 15, marginTop: 11, backgroundColor: colors.surface },
+  plan: { flexDirection: 'row', alignItems: 'center', minHeight: 72, borderWidth: 2, borderColor: colors.border, borderRadius: 18, padding: 15, marginTop: 11, backgroundColor: colors.surface },
   planSelected: { borderColor: colors.red, backgroundColor: '#FFF8E7' },
   planPrice: { color: colors.red, fontSize: 17, fontWeight: '900', marginLeft: 12 },
   note: { color: colors.muted, fontSize: 9, textAlign: 'center', marginTop: 10 },
@@ -164,9 +169,74 @@ export const styles = StyleSheet.create({
   addMemberButtonText: { color: colors.surface, fontSize: 12, fontWeight: '900' },
   verified: { flexDirection: 'row', alignItems: 'center', borderRadius: 17, padding: 14, marginTop: 18, backgroundColor: '#EEF7F0' },
   verifiedIcon: { width: 34, height: 34, borderRadius: 18, color: colors.surface, backgroundColor: colors.green, textAlign: 'center', lineHeight: 34, fontWeight: '900', marginRight: 12 },
-  nav: { height: 74, flexDirection: 'row', paddingTop: 8, paddingBottom: 4, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
-  navItem: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  navIcon: { color: '#9B7D6D', fontSize: 19 },
-  navLabel: { color: '#9B7D6D', fontSize: 9, marginTop: 3 },
-  navActive: { color: colors.red, fontWeight: '900' },
+
+  // --- added for the iOS-style shell -------------------------------------------------
+  // Grouped list: one card, hairline dividers, no divider under the last row. Borrowed from
+  // iOS inset-grouped tables because a bounded group tells the eye where a set ends far more
+  // cheaply than spacing alone does.
+  groupedList: { borderWidth: 1, borderColor: colors.border, borderRadius: 18, backgroundColor: colors.surface, overflow: 'hidden' },
+  lastRow: { borderBottomWidth: 0 },
+  checkTextDone: { color: colors.muted, textDecorationLine: 'line-through' },
+
+  // The swell meter: proof that a very slow fade-in is working.
+  swell: { height: 3, borderRadius: 3, backgroundColor: '#EBD5B9', marginTop: 7, overflow: 'hidden' },
+  swellFill: { height: '100%', borderRadius: 3, backgroundColor: colors.red },
+
+  // Hand-built switch so the reminder toggle animates and haptics like everything else.
+  toggle: { width: 50, height: 30, borderRadius: 16, backgroundColor: '#E2CDBE', padding: 3, justifyContent: 'center' },
+  toggleOn: { backgroundColor: '#E6A77D' },
+  knob: { width: 24, height: 24, borderRadius: 13, backgroundColor: colors.surface },
+  knobOn: { backgroundColor: colors.red, alignSelf: 'flex-end' },
+
+  // A radio mark next to each plan. The border-colour change alone was carrying the selection,
+  // which is invisible to anyone who cannot separate these two warm tones.
+  radio: { width: 22, height: 22, borderRadius: 12, borderWidth: 2, borderColor: '#CCAA96', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  radioOn: { borderColor: colors.red },
+  radioDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: colors.red },
+
+  participantCard: { borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 14, backgroundColor: colors.surface, marginBottom: 10 },
+  inputSpaced: { marginTop: 9 },
+  removeRow: { minHeight: 40, justifyContent: 'center', marginTop: 4 },
+  removeText: { color: '#A35D3B', fontSize: 12, fontWeight: '700' },
+
+  // Chips for adding people: additive, low-commitment actions read better as chips than as a
+  // stack of full-width buttons competing with the screen's real primary action.
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 2 },
+  chip: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 20, backgroundColor: colors.pale },
+  chipOutline: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  chipText: { color: colors.red, fontSize: 12, fontWeight: '800' },
+
+  listenButton: { minHeight: 52, borderRadius: 16, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center', marginTop: 20, paddingHorizontal: 16 },
+  listenButtonText: { color: colors.surface, fontSize: 15, fontWeight: '800' },
+
+  // City chips were 24pt tall, well under the ~44pt that adults hit reliably on a first try.
+  cityChip: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 20, backgroundColor: '#FFF3E4' },
+  cityChipOn: { backgroundColor: colors.gold },
+  cityChipText: { color: '#8D462A', fontSize: 12, fontWeight: '700' },
+  cityChipTextOn: { color: '#642410', fontWeight: '900' },
+  clockCard: { marginTop: 14 },
+  monthNav: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  // "Today" needs its own mark, distinct from "the date you tapped" — otherwise every visit
+  // starts with the user counting rows to find where they are.
+  dateToday: { borderWidth: 1.5, borderColor: colors.orange },
+  dateTodayText: { color: colors.orange, fontWeight: '900' },
+  linkRow: { minHeight: 44, justifyContent: 'center', marginTop: 4 },
+
+  dateLine: { color: colors.muted, fontSize: 12, lineHeight: 18, marginBottom: 14 },
+  dateLineStrong: { color: colors.ink, fontWeight: '800' },
+
+  // The expanded day: a label column narrow enough that the readings line up down the page,
+  // which is how a printed Panchangam is scanned — by row, never by sentence.
+  reading: { borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 16, backgroundColor: colors.surface, marginTop: 4 },
+  readingTitle: { color: colors.ink, fontSize: 15, fontWeight: '900' },
+  readingSummary: { color: colors.orange, fontSize: 11, fontWeight: '700', marginTop: 4, marginBottom: 6 },
+  readingRow: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 9, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#EFE0D4' },
+  readingLabel: { width: 96, color: colors.muted, fontSize: 11, fontWeight: '800' },
+  readingValue: { color: colors.ink, fontSize: 13, fontWeight: '700' },
+  readingDetail: { color: colors.muted, fontSize: 11, marginTop: 2 },
+  festivalBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 14, padding: 12, marginTop: 8, backgroundColor: '#FFF1D8', borderWidth: 1, borderColor: colors.gold },
+  festivalName: { color: colors.red, fontSize: 14, fontWeight: '900' },
+  // The rule is printed, not hidden: a reader who follows a different tradition can see exactly
+  // which convention produced this date and judge it, instead of just disagreeing with a number.
+  festivalRule: { color: '#8D462A', fontSize: 10, lineHeight: 15, marginTop: 3 },
 });
